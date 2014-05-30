@@ -1,0 +1,203 @@
+/****************************************
+ * Project_2014_A003 
+ * display patterns on six leds while playing some sounds
+ ****************************************/
+
+/******************************
+ * include libraries and declare initialize commands before void setup()
+ ******************************/
+#define SOUND_PIN 12  //the spearker
+#define SWITCH_PIN01 2  // the next three are the switches
+#define SWITCH_PIN02 4
+#define SWITCH_PIN03 7
+#define LED_00 3   // The six LED's
+#define LED_01 5
+#define LED_02 6
+#define LED_03 9
+#define LED_04 10
+#define LED_05 11
+
+#include "pitches.h" //definition of notes for sound
+
+int select = 0; //The select code to stear
+int wait =200; //delay used in writing to LED'S and pauses
+int bright = 75;  // Initial brightness level
+int NoteDuration = 10; //general note duration
+
+// notes in the melody:
+int melody[] = {
+  NOTE_D4, NOTE_F4, NOTE_AS4, NOTE_D5, NOTE_D5, NOTE_F4, NOTE_C5, NOTE_DS5, NOTE_D5, NOTE_AS4,
+  NOTE_AS3, NOTE_D4, NOTE_F4, NOTE_AS4, NOTE_AS4, NOTE_C4, NOTE_A4, NOTE_C5, NOTE_AS4};
+
+// note durations: 4 = quarter note, 8 = eighth note, etc.:
+int noteDurations[] = {
+  8, 8, 8, 4,4,8,4,4,4,4,8,8,8,4,4,8,4,4,4  };
+
+
+
+void setup() {
+
+  Serial.begin(115200); //setup serial communications for monitoring
+  
+  // setup all the pin modes
+  pinMode(LED_00, OUTPUT);
+  pinMode(LED_01, OUTPUT);
+  pinMode(LED_02, OUTPUT);
+  pinMode(LED_03, OUTPUT);
+  pinMode(LED_04, OUTPUT);
+  pinMode(LED_05, OUTPUT);
+  pinMode(SOUND_PIN, OUTPUT);
+  pinMode(SWITCH_PIN01, INPUT);
+  pinMode(SWITCH_PIN02, INPUT);
+  pinMode(SWITCH_PIN03, INPUT);
+  int wait =100; // Used to pause or control writing speed
+}
+
+void loop() {
+
+
+  // Get the switche positions
+  int button01 = digitalRead(SWITCH_PIN01);// Check for button press
+  int button02 = digitalRead(SWITCH_PIN02);// Check for button press
+  int button03 = digitalRead(SWITCH_PIN03);// Check for button press
+  
+  //print to serial port for debugging
+  Serial.println(button01);
+  Serial.println(button02);
+  Serial.println(button03);
+  Serial.println("buttons above");
+
+  select = 0; // Clear select for next decision tree
+  
+  if (button01 == HIGH){
+    select = select +1;
+  }
+  if (button02 == HIGH){
+    select = select + 2;
+  }
+  if (button03 == HIGH){
+    select = select + 4;
+  }
+  //More debugging lines
+  Serial.print ("select ");
+  Serial.println(select);
+
+//Use select to chose functin via switch case
+  switch (select){
+  case 0:
+    MakeNoise();
+    break;
+  case 1:
+    FlashLED(wait,bright);  // Call the flash one LED routine
+    delay(wait);
+    break;
+  case 2:
+    FlashAllLED(wait,bright); // Call the flash all LED'S routine
+    delay(wait);
+    break;
+  case 3:
+    AllOnLED(wait,bright); // Call the flash all LED'S routine
+    delay(wait);
+    break;
+  case 4:
+    AllOffLED(wait,bright); // Call the flash all off LED'S routine
+    delay(wait);
+    break;
+  case 5:
+    AllOffLED(wait,bright); // Call the flash all off LED'S routine
+    delay(wait);
+    break;
+  case 6:
+    AllOffLED(wait,bright); // Call the flash all off LED'S routine
+    delay(wait);
+    break;
+  case 7:
+    AllOffLED(wait,bright); // Call the flash all off LED'S routine
+    delay(wait);
+    break;
+  default:
+    break;
+  }
+
+
+//More debugging
+  Serial.println(wait);
+  Serial.println(bright);
+  Serial.println("?");
+
+}
+
+// All fuctions built below
+
+int FlashLED(int w, int b){  
+  // single led on at one time, cycle through all 6
+  int x = 0;
+  int LED[] = {
+    LED_00,LED_01,LED_02,LED_03,LED_04,LED_05          }; //array with output pins in
+  for (x = 0; x < 6; x ++){
+    analogWrite(LED[x],b);
+    delay(w);
+    analogWrite(LED[x],0);
+  }
+}
+
+
+int FlashAllLED(int w, int b){  
+  // single led on at one time, cycle through all 6
+  int x = 0;
+  int LED[] = {
+    LED_00,LED_01,LED_02,LED_03,LED_04,LED_05          }; //array with output pins in
+  for (x = 0; x < 6; x ++){
+    analogWrite(LED[x],b);
+  }
+  delay(w);
+  for (x = 0; x < 6; x ++){
+
+    analogWrite(LED[x],0);
+  }
+}
+
+
+int AllOnLED(int w, int b){  
+  // All led on at one time
+  int x = 0;
+  int LED[] = {
+    LED_00,LED_01,LED_02,LED_03,LED_04,LED_05          }; //array with output pins in
+  for (x = 0; x < 6; x ++){
+    analogWrite(LED[x],b);
+  }
+}
+
+
+int AllOffLED(int w, int b){  
+  // All led on at one time
+  int x = 0;
+  int LED[] = {
+    LED_00,LED_01,LED_02,LED_03,LED_04,LED_05          }; //array with output pins in
+  for (x = 0; x < 6; x ++){
+    analogWrite(LED[x],0);
+  }
+}
+
+
+int MakeNoise() {
+  // Iterate over the notes of the melody:
+  for (int thisNote = 0; thisNote < 19; thisNote++) {
+
+    // to calculate the note duration, take one second 
+    // divided by the note type.
+    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
+    int noteDuration = 1000/noteDurations[thisNote];
+    tone(SOUND_PIN, melody[thisNote],noteDuration);
+
+    // to distinguish the notes, set a minimum time between them.
+    // the note's duration + 30% seems to work well:
+    int pauseBetweenNotes = noteDuration * 1.30;
+    delay(pauseBetweenNotes);
+    // stop the tone playing:
+    noTone(8);
+    // initialize the digital pin as an output.
+  }
+}
+
+
